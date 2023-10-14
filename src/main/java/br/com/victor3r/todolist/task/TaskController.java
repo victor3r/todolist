@@ -1,42 +1,43 @@
-package br.com.victor3r.todolist.user;
+package br.com.victor3r.todolist.task;
 
 import java.util.HashMap;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import at.favre.lib.crypto.bcrypt.BCrypt;
+import br.com.victor3r.todolist.user.IUserRepository;
 
 @RestController
-@RequestMapping("/users")
-public class UserController {
+public class TaskController {
+  @Autowired
+  private ITaskRepository taskRepository;
 
   @Autowired
   private IUserRepository userRepository;
 
-  @PostMapping("")
-  public ResponseEntity<UserModel> create(@RequestBody UserModel userModel) {
+  @PostMapping("/users/{userId}/tasks")
+  public ResponseEntity<TaskModel> create(@RequestBody TaskModel taskModel,
+      @PathVariable(value = "userId") UUID userId) {
 
-    var foundUser = this.userRepository.findByUsername(userModel.getUsername());
+    var foundUser = this.userRepository.findById(userId);
 
-    if (foundUser != null) {
-      throw new ResponseStatusException(HttpStatus.CONFLICT, "USER_ALREADY_EXISTS");
+    if (!foundUser.isPresent()) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "USER_NOT_FOUND");
     }
 
-    var hashedPassword = BCrypt.withDefaults().hashToString(12, userModel.getPassword().toCharArray());
+    taskModel.setUser(foundUser.get());
 
-    userModel.setPassword(hashedPassword);
+    var createdTask = this.taskRepository.save(taskModel);
 
-    var createdUser = this.userRepository.save(userModel);
-
-    return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
+    return ResponseEntity.status(HttpStatus.CREATED).body(createdTask);
   }
 
   @ExceptionHandler(ResponseStatusException.class)
@@ -47,4 +48,5 @@ public class UserController {
 
     return ResponseEntity.status(e.getStatusCode()).body(hashMap);
   }
+
 }

@@ -1,36 +1,38 @@
-package br.com.victor3r.todolist.user;
+package br.com.victor3r.todolist.task;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import br.com.victor3r.todolist.task.TaskModel;
+import br.com.victor3r.todolist.user.UserModel;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.ManyToOne;
 import lombok.Data;
 
 @Data
-@Entity(name = "users")
-public class UserModel {
+@Entity(name = "tasks")
+public class TaskModel {
 
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
-  @Column(unique = true)
-  private String username;
-  private String name;
-  private String password;
+  private String description;
 
-  @OneToMany
-  private List<TaskModel> tasks;
+  @Column(length = 50)
+  private String title;
+  private LocalDateTime startAt;
+  private LocalDateTime endAt;
+  private PriorityType priority;
+
+  @ManyToOne
+  private UserModel user;
 
   @CreationTimestamp
   private LocalDateTime createdAt;
