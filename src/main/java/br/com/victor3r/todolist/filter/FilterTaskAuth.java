@@ -23,7 +23,19 @@ public class FilterTaskAuth extends OncePerRequestFilter {
   @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
+    var servletPath = request.getServletPath();
+
+    if (!servletPath.contains("/tasks")) {
+      filterChain.doFilter(request, response);
+      return;
+    }
+
     var authorizationHeader = request.getHeader("Authorization");
+
+    if (authorizationHeader == null) {
+      response.sendError(400, "MISSING_HEADER");
+      return;
+    }
 
     var encodedAuth = authorizationHeader.split(" ")[1];
 
